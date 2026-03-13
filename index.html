@@ -2,262 +2,140 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <meta name="theme-color" content="#0b0e11">
-    
-    <title>Crypto P2P Tracker Latam</title>
-    <meta name="description" content="Rastrea en tiempo real el sobrecosto y la diferencia porcentual del USDT en Binance P2P contra la tasa oficial de tu país.">
-    <meta property="og:title" content="Crypto P2P Tracker Latam">
-    <meta property="og:description" content="Compara el precio de Binance P2P vs el cambio oficial en tiempo real.">
-    <meta property="og:type" content="website">
-
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>P2P vs Oficial - La Verdad</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800;900&display=swap" rel="stylesheet">
     <style>
-        :root {
-            --bg-color: #0b0e11;
-            --card-bg: #181a20;
-            --binance-yellow: #FCD535;
-            --crypto-green: #0ECB81;
-            --crypto-red: #F6465D;
-            --text-main: #EAECEF;
-            --text-muted: #848E9C;
-            --border-radius: 12px;
-        }
-
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Roboto, sans-serif; }
-
-        body {
-            background-color: var(--bg-color);
-            color: var(--text-main);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            min-height: 100vh;
-            padding: 20px;
-        }
-
-        .header { text-align: center; margin-bottom: 25px; margin-top: 15px; width: 100%; max-width: 400px; }
-        .header h1 { color: var(--binance-yellow); font-size: 1.8rem; letter-spacing: 1px; margin-bottom: 15px; }
-        
-        .controls { display: flex; justify-content: space-between; background: var(--card-bg); padding: 10px; border-radius: var(--border-radius); }
-        select { background: #0b0e11; color: var(--text-main); border: 1px solid #2b3139; padding: 8px; border-radius: 6px; outline: none; font-weight: bold; width: 60%; cursor: pointer; }
-        
-        .volume-badge { background: #2b3139; padding: 8px 12px; border-radius: 6px; font-size: 0.9rem; font-weight: bold; color: var(--crypto-green); display: flex; align-items: center;}
-
-        .dashboard { display: flex; flex-direction: column; gap: 15px; width: 100%; max-width: 400px; }
-
-        .card {
-            background-color: var(--card-bg);
-            border-radius: var(--border-radius);
-            padding: 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-left: 4px solid transparent;
-        }
-
-        .card.p2p { border-left-color: var(--binance-yellow); }
-        .card.diff { border-left-color: var(--crypto-green); background: linear-gradient(90deg, #181a20 0%, #0a1912 100%); transition: all 0.3s ease; }
-        .card.diff.negative { border-left-color: var(--crypto-red); background: linear-gradient(90deg, #181a20 0%, #1c0a0d 100%); }
-        .card.official { border-left-color: #4CAF50; }
-
-        .card-info { display: flex; flex-direction: column; gap: 5px; }
-        .card-title { color: var(--text-muted); font-size: 0.85rem; text-transform: uppercase; font-weight: 600; }
-        
-        .price { font-size: 1.5rem; font-weight: bold; text-align: right; }
-        .price.highlight { color: var(--crypto-green); font-size: 1.8rem; text-shadow: 0 0 10px rgba(14, 203, 129, 0.2); }
-        .price.highlight.negative { color: var(--crypto-red); text-shadow: 0 0 10px rgba(246, 70, 93, 0.2); }
-        .symbol { font-size: 1rem; color: var(--text-muted); margin-right: 4px; }
-
-        .btn-update {
-            background-color: var(--binance-yellow);
-            color: #000;
-            border: none;
-            border-radius: var(--border-radius);
-            padding: 15px;
-            font-size: 1.1rem;
-            font-weight: bold;
-            width: 100%;
-            max-width: 400px;
-            margin-top: 25px;
-            cursor: pointer;
-            transition: opacity 0.2s, transform 0.1s;
-        }
-
-        .btn-update:active { transform: scale(0.98); }
-        .loading { opacity: 0.6; pointer-events: none; }
-        
-        .last-update { text-align: center; color: var(--text-muted); font-size: 0.75rem; margin-top: 10px; width: 100%; max-width: 400px;}
+        body { font-family: 'Inter', sans-serif; background-color: #0f172a; color: white; }
     </style>
 </head>
 <body>
+    <div id="root"></div>
 
-    <div class="header">
-        <h1>USDT Tracker</h1>
-        <div class="controls">
-            <select id="currency-selector" onchange="fetchData()">
-                <option value="PEN">🇵🇪 Perú (PEN)</option>
-                <option value="BOB">🇧🇴 Bolivia (BOB)</option>
-                <option value="BRL">🇧🇷 Brasil (BRL)</option>
-                <option value="ARS">🇦🇷 Argentina (ARS)</option>
-                <option value="CLP">🇨🇱 Chile (CLP)</option>
-                <option value="COP">🇨🇴 Colombia (COP)</option>
-                <option value="PYG">🇵🇾 Paraguay (PYG)</option>
-                <option value="UYU">🇺🇾 Uruguay (UYU)</option>
-            </select>
-            <div class="volume-badge">Vol: $500</div>
-        </div>
-    </div>
-
-    <div class="dashboard">
-        <div class="card p2p">
-            <div class="card-info">
-                <span class="card-title">Binance P2P</span>
-                <span style="font-size: 0.8rem; color: var(--text-muted)">Precio de compra USDT</span>
-            </div>
-            <div class="price" id="p2p-price">--</div>
-        </div>
-
-        <div class="card diff" id="diff-card">
-            <div class="card-info">
-                <span class="card-title" id="diff-title" style="color: var(--crypto-green)">Diferencia %</span>
-                <span style="font-size: 0.8rem; color: var(--text-muted)">Brecha P2P vs Oficial</span>
-            </div>
-            <div class="price highlight" id="diff-price">--</div>
-        </div>
-
-        <div class="card official">
-            <div class="card-info">
-                <span class="card-title">Cambio Oficial</span>
-                <span style="font-size: 0.8rem; color: var(--text-muted)">Referencia fija manual</span>
-            </div>
-            <div class="price" id="official-price">--</div>
-        </div>
-    </div>
-
-    <button class="btn-update" id="btn-update" onclick="fetchData(true)">Actualizar Mercado</button>
-    <div class="last-update" id="last-update-text">Buscando datos...</div>
-
-    <script>
-        const targetVolumeUSD = 500;
-        const CACHE_DURATION_MS = 5 * 60 * 1000; // 5 minutos de caché para no saturar la API
-        
-        const fiatConfig = {
-            PEN: { symbol: 'S/', fixedRate: 3.44, decimals: 2 },
-            BOB: { symbol: 'Bs', fixedRate: 6.96, decimals: 2 },
-            BRL: { symbol: 'R$', fixedRate: 5.30, decimals: 2 },
-            ARS: { symbol: 'ARS$', fixedRate: 1400.00, decimals: 2 }, 
-            CLP: { symbol: 'CLP$', fixedRate: 917.43, decimals: 0 },
-            COP: { symbol: 'COL$', fixedRate: 3711.28, decimals: 0 },
-            PYG: { symbol: '₲', fixedRate: 6454.17, decimals: 0 },
-            UYU: { symbol: '$U', fixedRate: 40.38, decimals: 2 }
+    <script type="text/babel">
+        // ESTA ES LA PIEDRA ANGULAR. Las tasas oficiales hardcodeadas que no las mueve ni Dios.
+        // Valores actualizados a marzo de 2026.
+        const OFFICIAL_RATES = {
+            ARS: 1398.26,
+            BOB: 6.91,
+            CLP: 917.43,
+            PEN: 3.45
         };
 
-        const binanceP2pUrl = 'https://corsproxy.io/?https://p2p.binance.com/bapi/c2c/v2/friendly/c2c/adv/search';
+        const COUNTRIES = [
+            { id: 'ARS', name: 'Argentina', flag: '🇦🇷', currency: 'ARS', endpoint: 'https://api.criptoya.com/api/binancep2p/USDT/ARS/500' },
+            { id: 'BOB', name: 'Bolivia', flag: '🇧🇴', currency: 'BOB', endpoint: 'https://api.criptoya.com/api/binancep2p/USDT/BOB/500' },
+            { id: 'CLP', name: 'Chile', flag: '🇨🇱', currency: 'CLP', endpoint: 'https://api.criptoya.com/api/binancep2p/USDT/CLP/500' },
+            { id: 'PEN', name: 'Perú', flag: '🇵🇪', currency: 'PEN', endpoint: 'https://api.criptoya.com/api/binancep2p/USDT/PEN/500' }
+        ];
 
-        function formatMoney(amount, decimals) {
-            return amount.toLocaleString('en-US', { minimumFractionDigits: decimals, maximumFractionDigits: decimals });
-        }
+        const App = () => {
+            const [prices, setPrices] = React.useState({});
+            const [loading, setLoading] = React.useState(true);
 
-        async function getBinanceP2PRate(fiat, transAmount, forceRefresh = false) {
-            const cacheKey = `p2p_cache_${fiat}`;
-            
-            // Revisar si tenemos datos en caché y si aún son válidos
-            if (!forceRefresh) {
-                const cachedData = localStorage.getItem(cacheKey);
-                if (cachedData) {
-                    const parsedData = JSON.parse(cachedData);
-                    const isCacheValid = (Date.now() - parsedData.timestamp) < CACHE_DURATION_MS;
-                    if (isCacheValid) return parsedData.price;
+            const fetchPrices = async () => {
+                const newPrices = { ...prices };
+                for (const country of COUNTRIES) {
+                    try {
+                        const res = await fetch(country.endpoint);
+                        const data = await res.json();
+                        // Asumimos que la API devuelve el precio en .ask (el precio de venta). 
+                        // Si la pinche API devuelve un objeto directo o el precio está en otro lado, se ajusta aquí.
+                        const currentPrice = data.ask || data.price || (data.data && data.data.price) || 0;
+                        newPrices[country.id] = parseFloat(currentPrice);
+                    } catch (error) {
+                        console.error(`¡Error de mierda jalando data de ${country.name}!`, error);
+                        newPrices[country.id] = null; // Para mostrar que se cayó esta mierda
+                    }
                 }
-            }
-
-            const payload = {
-                fiat: fiat, page: 1, rows: 1, tradeType: "BUY", asset: "USDT",
-                countries: [], payTypes: [], publisherType: null, transAmount: transAmount.toString()
+                setPrices(newPrices);
+                setLoading(false);
             };
 
-            try {
-                const response = await fetch(binanceP2pUrl, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'Accept': '*/*' },
-                    body: JSON.stringify(payload)
-                });
+            React.useEffect(() => {
+                fetchPrices(); // Primer putazo al cargar
+                const interval = setInterval(fetchPrices, 30000); // Se refresca cada jodidos 30 segundos
+                return () => clearInterval(interval);
+            }, []);
 
-                if (!response.ok) throw new Error("Error en la red");
+            return (
+                <div className="min-h-screen p-6 md:p-12">
+                    <header className="mb-12 text-center">
+                        <h1 className="text-4xl md:text-6xl font-black mb-4 text-transparent bg-clip-text bg-gradient-to-r from-green-400 to-blue-500 tracking-tight">
+                            BINANCE P2P vs OFICIAL
+                        </h1>
+                        <p className="text-slate-400 font-semibold uppercase tracking-widest text-sm md:text-base">
+                            La cruda y maldita realidad del mercado
+                        </p>
+                    </header>
 
-                const data = await response.json();
-                if(data && data.data && data.data.length > 0) {
-                    const price = parseFloat(data.data[0].adv.price);
-                    
-                    // Guardar en caché
-                    localStorage.setItem(cacheKey, JSON.stringify({ price: price, timestamp: Date.now() }));
-                    return price;
-                }
-                return null;
-            } catch (error) {
-                console.error("Error al consultar Binance:", error);
-                return null;
-            }
-        }
+                    {loading ? (
+                        <div className="text-center text-2xl font-bold text-slate-400 animate-pulse mt-20">
+                            Cargando esta mierda, aguanta un segundo...
+                        </div>
+                    ) : (
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-7xl mx-auto">
+                            {COUNTRIES.map(c => {
+                                const p2p = prices[c.id];
+                                const official = OFFICIAL_RATES[c.id];
+                                let diff = 0;
+                                let isPositive = true;
 
-        async function fetchData(forceRefresh = false) {
-            const btn = document.getElementById('btn-update');
-            const currency = document.getElementById('currency-selector').value;
-            const updateText = document.getElementById('last-update-text');
-            
-            btn.classList.add('loading');
-            btn.innerText = 'Consultando Binance...';
+                                if (p2p) {
+                                    // La puta fórmula matemática sin rodeos
+                                    diff = ((p2p - official) / official) * 100;
+                                    isPositive = diff >= 0;
+                                }
 
-            const config = fiatConfig[currency];
-            const officialRate = config.fixedRate;
-            const sym = config.symbol;
-            const dec = config.decimals;
-            const volumeInLocalFiat = Math.floor(targetVolumeUSD * officialRate);
+                                return (
+                                    <div key={c.id} className="bg-slate-800 rounded-2xl p-6 shadow-2xl border border-slate-700 hover:border-slate-500 transition-all duration-300">
+                                        <div className="flex justify-between items-center mb-6 border-b border-slate-700 pb-4">
+                                            <h2 className="text-2xl font-black flex items-center gap-3">
+                                                <span className="text-3xl">{c.flag}</span> 
+                                                {c.name}
+                                            </h2>
+                                            <span className="bg-slate-900 px-3 py-1 rounded-md text-sm font-bold text-slate-300 border border-slate-600">
+                                                {c.currency}
+                                            </span>
+                                        </div>
+                                        
+                                        {p2p ? (
+                                            <div className="space-y-5">
+                                                <div>
+                                                    <p className="text-slate-400 text-xs uppercase font-bold tracking-wider mb-1">Precio Binance P2P</p>
+                                                    <p className="text-4xl font-black text-white">{p2p.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</p>
+                                                </div>
+                                                <div>
+                                                    <p className="text-slate-500 text-xs uppercase font-bold tracking-wider mb-1">Tasa Oficial (Gobierno)</p>
+                                                    <p className="text-2xl font-semibold text-slate-300">{official.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</p>
+                                                </div>
+                                                <div className="pt-5 mt-2 border-t border-slate-700">
+                                                    <p className="text-slate-400 text-xs uppercase font-bold tracking-wider mb-2">Brecha / Diferencia</p>
+                                                    <p className={`text-4xl font-black ${isPositive ? 'text-green-400' : 'text-red-500'}`}>
+                                                        {isPositive ? '+' : ''}{diff.toFixed(2)}%
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        ) : (
+                                            <div className="text-red-400 py-10 text-center font-bold text-xl">
+                                                ¡La puta API no responde!
+                                            </div>
+                                        )}
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    )}
+                </div>
+            );
+        };
 
-            document.getElementById('official-price').innerHTML = `<span class="symbol">${sym}</span>${formatMoney(officialRate, dec)}`;
-
-            const diffCard = document.getElementById('diff-card');
-            const diffPrice = document.getElementById('diff-price');
-            const diffTitle = document.getElementById('diff-title');
-
-            const p2pRate = await getBinanceP2PRate(currency, volumeInLocalFiat, forceRefresh);
-
-            if (p2pRate) {
-                const difference = p2pRate - officialRate;
-                const percentDiff = (difference / officialRate) * 100;
-
-                document.getElementById('p2p-price').innerHTML = `<span class="symbol">${sym}</span>${formatMoney(p2pRate, dec)}`;
-                
-                const sign = percentDiff > 0 ? '+' : '';
-                diffPrice.innerHTML = `${sign}${percentDiff.toFixed(2)}%`;
-
-                if (percentDiff < 0) {
-                    diffCard.classList.add('negative');
-                    diffPrice.classList.add('negative');
-                    diffTitle.style.color = 'var(--crypto-red)';
-                } else {
-                    diffCard.classList.remove('negative');
-                    diffPrice.classList.remove('negative');
-                    diffTitle.style.color = 'var(--crypto-green)';
-                }
-
-                // Actualizar hora
-                const now = new Date();
-                updateText.innerText = `Última actualización: ${now.toLocaleTimeString()}`;
-
-            } else {
-                document.getElementById('p2p-price').innerHTML = "Error";
-                document.getElementById('diff-price').innerHTML = "--";
-                updateText.innerText = "Error al conectar con el servidor proxy.";
-                if (forceRefresh) alert("El servidor proxy gratuito está saturado. Intenta de nuevo en unos minutos.");
-            }
-
-            btn.classList.remove('loading');
-            btn.innerText = 'Actualizar Mercado';
-        }
-
-        // Cargar datos al iniciar usando la caché si existe
-        window.onload = () => fetchData(false);
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
     </script>
 </body>
 </html>
