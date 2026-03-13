@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#0b0e11">
+    
+    <title>Crypto P2P Tracker Latam</title>
+    <meta name="description" content="Rastrea en tiempo real el sobrecosto y la diferencia porcentual del USDT en Binance P2P contra la tasa oficial de tu país.">
+    <meta property="og:title" content="Crypto P2P Tracker Latam">
+    <meta property="og:description" content="Compara el precio de Binance P2P vs el cambio oficial en tiempo real.">
+    <meta property="og:type" content="website">
+
+    <style>
+        :root {
+            --bg-color: #0b0e11;
+            --card-bg: #181a20;
+            --binance-yellow: #FCD535;
+            --crypto-green: #0ECB81;
+            --crypto-red: #F6465D;
+            --text-main: #EAECEF;
+            --text-muted: #848E9C;
+            --border-radius: 12px;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Roboto, sans-serif; }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .header { text-align: center; margin-bottom: 25px; margin-top: 15px; width: 100%; max-width: 400px; }
+        .header h1 { color: var(--binance-yellow); font-size: 1.8rem; letter-spacing: 1px; margin-bottom: 15px; }
+        
+        .controls { display: flex; justify-content: space-between; background: var(--card-bg); padding: 10px; border-radius: var(--border-radius); }
+        select { background: #0b0e11; color: var(--text-main); border: 1px solid #2b3139; padding: 8px; border-radius: 6px; outline: none; font-weight: bold; width: 60%; cursor: pointer; }
+        
+        .volume-badge { background: #2b3139; padding: 8px 12px; border-radius: 6px; font-size: 0.9rem; font-weight: bold; color: var(--crypto-green); display: flex; align-items: center;}
+
+        .dashboard { display: flex; flex-direction: column; gap: 15px; width: 100%; max-width: 400px; }
+
+        .card {
+            background-color: var(--card-bg);
+            border-radius: var(--border-radius);
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-left: 4px solid transparent;
+        }
+
+        .card.p2p { border-left-color: var(--binance-yellow); }
+        .card.diff { border-left-color: var(--crypto-green); background: linear-gradient(90deg, #181a20 0%, #0a1912 100%); transition: all 0.3s ease; }
+        .card.diff.negative { border-left-color: var(--crypto-red); background: linear-gradient(90deg, #181a20 0%, #1c0a0d 100%); }
+        .card.official { border-left-color: #4CAF50; }
+
+        .card-info { display: flex; flex-direction: column; gap: 5px; }
+        .card-title { color: var(--text-muted); font-size: 0.85rem; text-transform: uppercase; font-weight: 600; }
+        
+        .price { font-size: 1.5rem; font-weight: bold; text-align: right; }
+        .price.highlight { color: var(--crypto-green); font-size: 1.8rem; text-shadow: 0 0 10px rgba(14, 203, 129, 0.2); }
+        .price.highlight.negative { color: var(--crypto-red); text-shadow: 0 0 10px rgba(246, 70, 93, 0.2); }
+        .symbol { font-size: 1rem; color: var(--text-muted); margin-right: 4px; }
+
+        .btn-update {
+            background-color: var(--binance-yellow);
+            color: #000;
+            border: none;
+            border-radius: var(--border-radius);
+            padding: 15px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            width: 100%;
+            max-width: 400px;
+            margin-top: 25px;
+            cursor: pointer;
+            transition: opacity 0.2s, transform 0.1s;
+        }
+
+        .btn-update:active { transform: scale(0.98); }
+        .loading { opacity: 0.6; pointer-events: none; }
+        
+        .last-update { text-align: center; color: var(--text-muted); font-size: 0.75rem; margin-top: 10px; width: 100%; max-width: 400px;}
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <h1>USDT Tracker</h1>
+        <div class="controls">
+            <select id="currency-selector" onchange="fetchData()">
+                <option value="PEN">🇵🇪 Perú (PEN)</option>
+                <option value="BOB">🇧🇴 Bolivia (BOB)</option>
+                <option value="BRL">🇧🇷 Brasil (BRL)</option>
+                <option value="ARS">🇦🇷 Argentina (ARS)</option>
+                <option value="CLP">🇨🇱 Chile (CLP)</option>
+                <option value="COP">🇨🇴 Colombia (COP)</option>
+                <option value="PYG">🇵🇾 Paraguay (PYG)</option>
+                <option value="UYU">🇺🇾 Uruguay (UYU)</option>
+            </select>
+            <div class="volume-badge">Vol: $500</div>
+        </div>
+    </div>
+
+    <div class="dashboard">
+        <div class="card p2p">
+            <div class="card-info">
+                <span class="card-title">Binance P2P</span>
+                <span style="font-size: 0.8rem; color: var(--text-muted)">Precio de compra USDT</span>
+            </div>
+            <div class="price" id="p2p-price">--</div>
+        </div>
+
+        <div class="card diff" id="diff-card">
+            <div class="card-info">
+                <span class="card-title" id="diff-title" style="color: var(--crypto-green)">Diferencia %</span>
+                <span style="font-size: 0.8rem; color: var(--text-muted)">Brecha P2P vs Oficial</span>
+            </div>
+            <div class="price highlight" id="diff-price">--</div>
+        </div>
+
+        <div class="card official">
+            <div class="card-info">
+                <span class="card-title">Cambio Oficial</span>
+                <span style="font-size: 0.8rem; color: var(--text-muted)">Referencia fija manual</span>
+            </div>
+            <div class="price" id="official-price">--</div>
+        </div>
+    </div>
+
+    <button class="btn-update" id="btn-update" onclick="fetchData(true)">Actualizar Mercado</button>
+    <div class="last-update" id="last-update-text">Buscando datos...</div>
+
+    <script>
+        const targetVolumeUSD = 500;
+        const CACHE_DURATION_MS = 5 * 60 * 1000; // 5 minutos de caché para no saturar la API
+        
+        const fiatConfig = {
+            PEN: { symbol: 'S/', fixedRate: 3.44, decimals: 2 },
+            BOB: { symbol: 'Bs', fixedRate: 6.96, decimals: 2 },
+            BRL: { symbol: 'R$', fixedRate: 5.30, decimals: 2 },
+            ARS: { symbol: 'ARS$', fixedRate: 1400.00, decimals: 2 }, 
+            CLP: { symbol: 'CLP$', fixedRate: 917.43, decimals: 0 },
+            COP: { symbol: 'COL$', fixedRate: 3711.28, decimals: 0 },
+            PYG: { symbol: '₲', fixedRate: 6454.17, decimals: 0 },
+            UYU: { symbol: '$U', fixedRate: 40.38, decimals: 2 }
+        };
+
+        const binanceP2pUrl = 'https://corsproxy.io/?https://p2p.binance.com/bapi/c2c/v2/friendly/c2c/adv/search';
+
+        function formatMoney(amount, decimals) {
+            return amount.toLocaleString('en-US', { minimumFractionDigits: decimals, maximumFractionDigits: decimals });
+        }
+
+        async function getBinanceP2PRate(fiat, transAmount, forceRefresh = false) {
+            const cacheKey = `p2p_cache_${fiat}`;
+            
+            // Revisar si tenemos datos en caché y si aún son válidos
+            if (!forceRefresh) {
+                const cachedData = localStorage.getItem(cacheKey);
+                if (cachedData) {
+                    const parsedData = JSON.parse(cachedData);
+                    const isCacheValid = (Date.now() - parsedData.timestamp) < CACHE_DURATION_MS;
+                    if (isCacheValid) return parsedData.price;
+                }
+            }
+
+            const payload = {
+                fiat: fiat, page: 1, rows: 1, tradeType: "BUY", asset: "USDT",
+                countries: [], payTypes: [], publisherType: null, transAmount: transAmount.toString()
+            };
+
+            try {
+                const response = await fetch(binanceP2pUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Accept': '*/*' },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!response.ok) throw new Error("Error en la red");
+
+                const data = await response.json();
+                if(data && data.data && data.data.length > 0) {
+                    const price = parseFloat(data.data[0].adv.price);
+                    
+                    // Guardar en caché
+                    localStorage.setItem(cacheKey, JSON.stringify({ price: price, timestamp: Date.now() }));
+                    return price;
+                }
+                return null;
+            } catch (error) {
+                console.error("Error al consultar Binance:", error);
+                return null;
+            }
+        }
+
+        async function fetchData(forceRefresh = false) {
+            const btn = document.getElementById('btn-update');
+            const currency = document.getElementById('currency-selector').value;
+            const updateText = document.getElementById('last-update-text');
+            
+            btn.classList.add('loading');
+            btn.innerText = 'Consultando Binance...';
+
+            const config = fiatConfig[currency];
+            const officialRate = config.fixedRate;
+            const sym = config.symbol;
+            const dec = config.decimals;
+            const volumeInLocalFiat = Math.floor(targetVolumeUSD * officialRate);
+
+            document.getElementById('official-price').innerHTML = `<span class="symbol">${sym}</span>${formatMoney(officialRate, dec)}`;
+
+            const diffCard = document.getElementById('diff-card');
+            const diffPrice = document.getElementById('diff-price');
+            const diffTitle = document.getElementById('diff-title');
+
+            const p2pRate = await getBinanceP2PRate(currency, volumeInLocalFiat, forceRefresh);
+
+            if (p2pRate) {
+                const difference = p2pRate - officialRate;
+                const percentDiff = (difference / officialRate) * 100;
+
+                document.getElementById('p2p-price').innerHTML = `<span class="symbol">${sym}</span>${formatMoney(p2pRate, dec)}`;
+                
+                const sign = percentDiff > 0 ? '+' : '';
+                diffPrice.innerHTML = `${sign}${percentDiff.toFixed(2)}%`;
+
+                if (percentDiff < 0) {
+                    diffCard.classList.add('negative');
+                    diffPrice.classList.add('negative');
+                    diffTitle.style.color = 'var(--crypto-red)';
+                } else {
+                    diffCard.classList.remove('negative');
+                    diffPrice.classList.remove('negative');
+                    diffTitle.style.color = 'var(--crypto-green)';
+                }
+
+                // Actualizar hora
+                const now = new Date();
+                updateText.innerText = `Última actualización: ${now.toLocaleTimeString()}`;
+
+            } else {
+                document.getElementById('p2p-price').innerHTML = "Error";
+                document.getElementById('diff-price').innerHTML = "--";
+                updateText.innerText = "Error al conectar con el servidor proxy.";
+                if (forceRefresh) alert("El servidor proxy gratuito está saturado. Intenta de nuevo en unos minutos.");
+            }
+
+            btn.classList.remove('loading');
+            btn.innerText = 'Actualizar Mercado';
+        }
+
+        // Cargar datos al iniciar usando la caché si existe
+        window.onload = () => fetchData(false);
+    </script>
+</body>
+</html>
