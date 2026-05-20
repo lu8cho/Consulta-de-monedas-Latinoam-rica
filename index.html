@@ -2,140 +2,595 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>P2P vs Oficial - La Verdad</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
-    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
-    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800;900&display=swap" rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.5, user-scalable=yes, viewport-fit=cover">
+    <title>Latam USDT · Precios P2P & Conversor</title>
     <style>
-        body { font-family: 'Inter', sans-serif; background-color: #0f172a; color: white; }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: radial-gradient(circle at 10% 20%, #0a0f1a, #03060c);
+            font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', 'Poppins', sans-serif;
+            min-height: 100vh;
+            padding: 1rem 0.8rem;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: #eef2ff;
+        }
+
+        .app-container {
+            max-width: 1100px;
+            width: 100%;
+            background: rgba(12, 20, 30, 0.65);
+            backdrop-filter: blur(14px);
+            border-radius: 2rem;
+            border: 1px solid rgba(0, 255, 255, 0.18);
+            box-shadow: 0 30px 45px -15px rgba(0,0,0,0.7);
+            overflow: hidden;
+            margin: 0 auto;
+        }
+
+        .header {
+            padding: 1.5rem 1.2rem 1rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            gap: 0.6rem;
+            border-bottom: 1px solid rgba(0, 255, 255, 0.15);
+        }
+
+        .title h1 {
+            font-size: clamp(1.4rem, 5vw, 2rem);
+            font-weight: 700;
+            color: #b0e0e6;
+            letter-spacing: -0.3px;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .sub {
+            font-size: 0.8rem;
+            color: #cbd5e6;
+            font-weight: 500;
+            padding: 0 0.5rem;
+        }
+
+        .refresh-btn {
+            background: #1e2a3a;
+            border: 1px solid #2dd4bf;
+            padding: 0.7rem 1.5rem;
+            border-radius: 3rem;
+            font-weight: 600;
+            color: #b9e6ff;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-size: 0.85rem;
+            background: rgba(18, 30, 45, 0.7);
+            backdrop-filter: blur(5px);
+            margin-top: 0.3rem;
+            white-space: nowrap;
+        }
+
+        .refresh-btn:hover {
+            background: #2d4258;
+            border-color: #22d3ee;
+            color: white;
+            transform: scale(0.97);
+        }
+
+        .refresh-btn:disabled {
+            opacity: 0.5;
+            pointer-events: none;
+        }
+
+        .price-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 1rem;
+            padding: 1.5rem 1.2rem;
+        }
+
+        .price-card {
+            background: rgba(18, 28, 42, 0.7);
+            backdrop-filter: blur(4px);
+            border-radius: 1.2rem;
+            padding: 1.2rem 0.8rem;
+            border: 1px solid rgba(255,255,255,0.05);
+            transition: all 0.25s ease;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            gap: 0.3rem;
+            min-height: 145px;
+            width: 100%;
+        }
+
+        .price-card:hover {
+            border-color: #2dd4bf60;
+            background: rgba(25, 38, 55, 0.8);
+            transform: translateY(-3px);
+            box-shadow: 0 12px 20px -8px rgba(0,0,0,0.5);
+        }
+
+        .flag-emoji {
+            font-size: 2.2rem;
+            line-height: 1;
+        }
+
+        .country-name {
+            font-weight: 600;
+            font-size: 0.8rem;
+            color: #cbd5e6;
+            text-transform: uppercase;
+        }
+
+        .currency-code {
+            font-size: 0.65rem;
+            color: #6f8fae;
+            font-weight: 500;
+        }
+
+        .price {
+            font-size: 1.2rem;
+            font-weight: 800;
+            font-family: 'JetBrains Mono', 'Fira Code', monospace;
+            color: #0ff;
+            margin-top: 0.4rem;
+            word-break: break-word;
+        }
+
+        .update-time {
+            font-size: 0.55rem;
+            color: #5b7c9c;
+            margin-top: auto;
+            padding-top: 0.3rem;
+            border-top: 1px dashed #2c3e5020;
+            width: 100%;
+        }
+
+        /* Conversor compacto con banderas */
+        .converter-section {
+            margin: 0.8rem 1.2rem 1.5rem;
+            background: rgba(0,0,0,0.25);
+            border-radius: 1.8rem;
+            padding: 1.2rem 1.2rem;
+            border: 1px solid rgba(0,255,255,0.12);
+            backdrop-filter: blur(5px);
+        }
+
+        .section-title {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 0.8rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: #b9e6ff;
+            flex-wrap: wrap;
+        }
+
+        .converter-layout {
+            display: flex;
+            flex-direction: column;
+            gap: 0.8rem;
+        }
+
+        /* Fila principal: monedas juntas */
+        .selects-row {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.3rem;
+            flex-wrap: wrap;
+        }
+
+        .currency-select-wrapper {
+            flex: 0 1 auto;
+            min-width: 100px;
+        }
+
+        .currency-select-wrapper label {
+            display: block;
+            font-size: 0.6rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #9ab3d0;
+            margin-bottom: 0.2rem;
+        }
+
+        select {
+            width: 100%;
+            background: #0f172a;
+            border: 1px solid #2d3e5a;
+            border-radius: 2rem;
+            padding: 0.6rem 0.8rem;
+            font-size: 1rem;
+            color: #f1f5f9;
+            font-weight: 500;
+            outline: none;
+            cursor: pointer;
+            appearance: none;
+            -webkit-appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%239ab3d0' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 8px center;
+            padding-right: 1.8rem;
+            transition: 0.2s;
+            text-align: center;
+        }
+
+        select:focus {
+            border-color: #22d3ee;
+            box-shadow: 0 0 8px #22d3ee30;
+        }
+
+        /* Icono intercambio pegado */
+        .swap-icon {
+            font-size: 1.8rem;
+            color: #22d3ee;
+            cursor: pointer;
+            transition: transform 0.3s ease, color 0.2s;
+            margin: 0 0.2rem;
+            background: rgba(15,25,40,0.6);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid #2dd4bf40;
+            flex-shrink: 0;
+        }
+
+        .swap-icon:hover {
+            color: #0ff;
+            border-color: #22d3ee;
+        }
+
+        .swap-icon.rotated {
+            transform: rotate(180deg);
+        }
+
+        .amount-row {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.2rem;
+            margin-top: 0.2rem;
+        }
+
+        .amount-row label {
+            font-size: 0.65rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #9ab3d0;
+        }
+
+        #amountInput {
+            width: min(100%, 200px);
+            background: #0f172a;
+            border: 1px solid #2d3e5a;
+            border-radius: 2rem;
+            padding: 0.7rem 1rem;
+            font-size: 1rem;
+            font-family: 'JetBrains Mono', monospace;
+            color: #f1f5f9;
+            text-align: center;
+            outline: none;
+            transition: 0.2s;
+        }
+
+        #amountInput:focus {
+            border-color: #22d3ee;
+            box-shadow: 0 0 8px #22d3ee30;
+        }
+
+        .result-display {
+            background: #0a101f;
+            border-radius: 2rem;
+            padding: 0.7rem 1.2rem;
+            text-align: center;
+            font-size: 1.3rem;
+            font-weight: 700;
+            font-family: 'JetBrains Mono', monospace;
+            border: 1px solid #0ff;
+            color: #0ff;
+            width: fit-content;
+            margin: 0.3rem auto 0;
+            min-width: 160px;
+            word-break: break-word;
+        }
+
+        /* Tasas a BOB */
+        .bridge-info {
+            margin-top: 1.2rem;
+            background: #050c14a0;
+            border-radius: 1rem;
+            padding: 0.7rem 1rem;
+            font-size: 0.65rem;
+            text-align: center;
+            color: #b4cef0;
+            border-left: 3px solid #2dd4bf;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            align-items: center;
+            gap: 0.3rem 1rem;
+        }
+
+        .bridge-info .rate-item {
+            display: flex;
+            align-items: baseline;
+            gap: 0.3rem;
+            white-space: nowrap;
+        }
+
+        .bridge-info .rate-label {
+            color: #9ab3d0;
+            font-weight: 400;
+        }
+
+        .bridge-info .rate-value {
+            font-weight: 700;
+            color: #facc15;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        #converterError {
+            text-align: center;
+            margin-top: 0.5rem;
+            font-size: 0.65rem;
+            color: #facc15;
+            min-height: 20px;
+        }
+
+        footer {
+            text-align: center;
+            font-size: 0.6rem;
+            padding: 1rem 0 1.5rem;
+            color: #5b7c9c;
+            border-top: 1px solid rgba(255,255,255,0.05);
+        }
+
+        /* Móviles */
+        @media (max-width: 600px) {
+            body {
+                padding: 0.5rem 0.3rem;
+            }
+
+            .app-container {
+                border-radius: 1.5rem;
+            }
+
+            .price-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 0.7rem;
+                padding: 1rem 0.8rem;
+            }
+
+            .price-card {
+                padding: 0.9rem 0.5rem;
+                min-height: 130px;
+                border-radius: 1rem;
+            }
+
+            .flag-emoji {
+                font-size: 1.8rem;
+            }
+
+            .price {
+                font-size: 1rem;
+            }
+
+            .converter-section {
+                margin: 0.5rem 0.8rem 1.2rem;
+                padding: 1rem 0.9rem;
+            }
+
+            .selects-row {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+
+            .swap-icon {
+                margin: 0.1rem auto;
+                align-self: center;
+                width: 36px;
+                height: 36px;
+                font-size: 1.5rem;
+            }
+
+            .currency-select-wrapper {
+                width: 100%;
+                min-width: auto;
+            }
+
+            select {
+                width: 100%;
+                font-size: 0.9rem;
+            }
+
+            .bridge-info {
+                font-size: 0.6rem;
+                gap: 0.2rem 0.8rem;
+                padding: 0.6rem 0.8rem;
+            }
+        }
     </style>
 </head>
 <body>
-    <div id="root"></div>
+<div class="app-container">
+    <div class="header">
+        <div class="title">
+            <h1>🌎 Latam USDT</h1>
+            <div class="sub">Precios de compra P2P (ask) · Conversor vía USDT</div>
+        </div>
+        <button class="refresh-btn" id="refreshPricesBtn">
+            🔄 Actualizar cotizaciones
+        </button>
+    </div>
 
-    <script type="text/babel">
-        // ESTA ES LA PIEDRA ANGULAR. Las tasas oficiales hardcodeadas que no las mueve ni Dios.
-        // Valores actualizados a marzo de 2026.
-        const OFFICIAL_RATES = {
-            ARS: 1398.26,
-            BOB: 6.91,
-            CLP: 917.43,
-            PEN: 3.45
-        };
+    <div class="price-grid">
+        <div class="price-card">
+            <div class="flag-emoji">🇦🇷</div>
+            <div class="country-name">Argentina</div>
+            <div class="currency-code">ARS</div>
+            <div class="price" id="arsPriceDisplay">--- ARS</div>
+            <div class="update-time" id="arsUpdateTime">🕒 --:--:--</div>
+        </div>
+        <div class="price-card">
+            <div class="flag-emoji">🇧🇴</div>
+            <div class="country-name">Bolivia</div>
+            <div class="currency-code">BOB</div>
+            <div class="price" id="bobPriceDisplay">--- BOB</div>
+            <div class="update-time" id="bobUpdateTime">🕒 --:--:--</div>
+        </div>
+        <div class="price-card">
+            <div class="flag-emoji">🇧🇷</div>
+            <div class="country-name">Brasil</div>
+            <div class="currency-code">BRL</div>
+            <div class="price" id="brlPriceDisplay">--- BRL</div>
+            <div class="update-time" id="brlUpdateTime">🕒 --:--:--</div>
+        </div>
+        <div class="price-card">
+            <div class="flag-emoji">🇨🇱</div>
+            <div class="country-name">Chile</div>
+            <div class="currency-code">CLP</div>
+            <div class="price" id="clpPriceDisplay">--- CLP</div>
+            <div class="update-time" id="clpUpdateTime">🕒 --:--:--</div>
+        </div>
+        <div class="price-card">
+            <div class="flag-emoji">🇵🇪</div>
+            <div class="country-name">Perú</div>
+            <div class="currency-code">PEN</div>
+            <div class="price" id="penPriceDisplay">--- PEN</div>
+            <div class="update-time" id="penUpdateTime">🕒 --:--:--</div>
+        </div>
+        <div class="price-card">
+            <div class="flag-emoji">🇵🇾</div>
+            <div class="country-name">Paraguay</div>
+            <div class="currency-code">PYG</div>
+            <div class="price" id="pygPriceDisplay">--- PYG</div>
+            <div class="update-time" id="pygUpdateTime">🕒 --:--:--</div>
+        </div>
+    </div>
 
-        const COUNTRIES = [
-            { id: 'ARS', name: 'Argentina', flag: '🇦🇷', currency: 'ARS', endpoint: 'https://api.criptoya.com/api/binancep2p/USDT/ARS/500' },
-            { id: 'BOB', name: 'Bolivia', flag: '🇧🇴', currency: 'BOB', endpoint: 'https://api.criptoya.com/api/binancep2p/USDT/BOB/500' },
-            { id: 'CLP', name: 'Chile', flag: '🇨🇱', currency: 'CLP', endpoint: 'https://api.criptoya.com/api/binancep2p/USDT/CLP/500' },
-            { id: 'PEN', name: 'Perú', flag: '🇵🇪', currency: 'PEN', endpoint: 'https://api.criptoya.com/api/binancep2p/USDT/PEN/500' }
-        ];
-
-        const App = () => {
-            const [prices, setPrices] = React.useState({});
-            const [loading, setLoading] = React.useState(true);
-
-            const fetchPrices = async () => {
-                const newPrices = { ...prices };
-                for (const country of COUNTRIES) {
-                    try {
-                        const res = await fetch(country.endpoint);
-                        const data = await res.json();
-                        // Asumimos que la API devuelve el precio en .ask (el precio de venta). 
-                        // Si la pinche API devuelve un objeto directo o el precio está en otro lado, se ajusta aquí.
-                        const currentPrice = data.ask || data.price || (data.data && data.data.price) || 0;
-                        newPrices[country.id] = parseFloat(currentPrice);
-                    } catch (error) {
-                        console.error(`¡Error de mierda jalando data de ${country.name}!`, error);
-                        newPrices[country.id] = null; // Para mostrar que se cayó esta mierda
-                    }
-                }
-                setPrices(newPrices);
-                setLoading(false);
-            };
-
-            React.useEffect(() => {
-                fetchPrices(); // Primer putazo al cargar
-                const interval = setInterval(fetchPrices, 30000); // Se refresca cada jodidos 30 segundos
-                return () => clearInterval(interval);
-            }, []);
-
-            return (
-                <div className="min-h-screen p-6 md:p-12">
-                    <header className="mb-12 text-center">
-                        <h1 className="text-4xl md:text-6xl font-black mb-4 text-transparent bg-clip-text bg-gradient-to-r from-green-400 to-blue-500 tracking-tight">
-                            BINANCE P2P vs OFICIAL
-                        </h1>
-                        <p className="text-slate-400 font-semibold uppercase tracking-widest text-sm md:text-base">
-                            La cruda y maldita realidad del mercado
-                        </p>
-                    </header>
-
-                    {loading ? (
-                        <div className="text-center text-2xl font-bold text-slate-400 animate-pulse mt-20">
-                            Cargando esta mierda, aguanta un segundo...
-                        </div>
-                    ) : (
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-7xl mx-auto">
-                            {COUNTRIES.map(c => {
-                                const p2p = prices[c.id];
-                                const official = OFFICIAL_RATES[c.id];
-                                let diff = 0;
-                                let isPositive = true;
-
-                                if (p2p) {
-                                    // La puta fórmula matemática sin rodeos
-                                    diff = ((p2p - official) / official) * 100;
-                                    isPositive = diff >= 0;
-                                }
-
-                                return (
-                                    <div key={c.id} className="bg-slate-800 rounded-2xl p-6 shadow-2xl border border-slate-700 hover:border-slate-500 transition-all duration-300">
-                                        <div className="flex justify-between items-center mb-6 border-b border-slate-700 pb-4">
-                                            <h2 className="text-2xl font-black flex items-center gap-3">
-                                                <span className="text-3xl">{c.flag}</span> 
-                                                {c.name}
-                                            </h2>
-                                            <span className="bg-slate-900 px-3 py-1 rounded-md text-sm font-bold text-slate-300 border border-slate-600">
-                                                {c.currency}
-                                            </span>
-                                        </div>
-                                        
-                                        {p2p ? (
-                                            <div className="space-y-5">
-                                                <div>
-                                                    <p className="text-slate-400 text-xs uppercase font-bold tracking-wider mb-1">Precio Binance P2P</p>
-                                                    <p className="text-4xl font-black text-white">{p2p.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</p>
-                                                </div>
-                                                <div>
-                                                    <p className="text-slate-500 text-xs uppercase font-bold tracking-wider mb-1">Tasa Oficial (Gobierno)</p>
-                                                    <p className="text-2xl font-semibold text-slate-300">{official.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</p>
-                                                </div>
-                                                <div className="pt-5 mt-2 border-t border-slate-700">
-                                                    <p className="text-slate-400 text-xs uppercase font-bold tracking-wider mb-2">Brecha / Diferencia</p>
-                                                    <p className={`text-4xl font-black ${isPositive ? 'text-green-400' : 'text-red-500'}`}>
-                                                        {isPositive ? '+' : ''}{diff.toFixed(2)}%
-                                                    </p>
-                                                </div>
-                                            </div>
-                                        ) : (
-                                            <div className="text-red-400 py-10 text-center font-bold text-xl">
-                                                ¡La puta API no responde!
-                                            </div>
-                                        )}
-                                    </div>
-                                );
-                            })}
-                        </div>
-                    )}
+    <div class="converter-section">
+        <div class="section-title">
+            <span>🔄 Conversor instantáneo</span>
+            <span style="font-size:0.65rem; opacity:0.7;">(puente USDT)</span>
+        </div>
+        <div class="converter-layout">
+            <div class="selects-row">
+                <div class="currency-select-wrapper">
+                    <label>📤 De</label>
+                    <select id="fromCurrency">
+                        <option value="ARS">🇦🇷 ARS</option>
+                        <option value="BOB">🇧🇴 BOB</option>
+                        <option value="BRL">🇧🇷 BRL</option>
+                        <option value="CLP">🇨🇱 CLP</option>
+                        <option value="PEN">🇵🇪 PEN</option>
+                        <option value="PYG">🇵🇾 PYG</option>
+                    </select>
                 </div>
-            );
+                <div class="swap-icon" id="swapIcon" title="Intercambiar monedas">⇄</div>
+                <div class="currency-select-wrapper">
+                    <label>📥 A</label>
+                    <select id="toCurrency">
+                        <option value="BOB">🇧🇴 BOB</option>
+                        <option value="ARS">🇦🇷 ARS</option>
+                        <option value="BRL">🇧🇷 BRL</option>
+                        <option value="CLP">🇨🇱 CLP</option>
+                        <option value="PEN" selected>🇵🇪 PEN</option>
+                        <option value="PYG">🇵🇾 PYG</option>
+                    </select>
+                </div>
+            </div>
+            <div class="amount-row">
+                <label>💵 Cantidad</label>
+                <input type="number" id="amountInput" value="100" step="any" placeholder="0.00">
+            </div>
+            <div class="result-display" id="conversionResult">0.00</div>
+        </div>
+
+        <div class="bridge-info" id="bridgeInfo">
+            <div class="rate-item"><span class="rate-label">1 ARS =</span> <span class="rate-value" id="bridgeArs">---</span> <span class="rate-label">BOB</span></div>
+            <div class="rate-item"><span class="rate-label">1 BOB =</span> <span class="rate-value">1.0000</span> <span class="rate-label">BOB</span></div>
+            <div class="rate-item"><span class="rate-label">1 BRL =</span> <span class="rate-value" id="bridgeBrl">---</span> <span class="rate-label">BOB</span></div>
+            <div class="rate-item"><span class="rate-label">1 CLP =</span> <span class="rate-value" id="bridgeClp">---</span> <span class="rate-label">BOB</span></div>
+            <div class="rate-item"><span class="rate-label">1 PEN =</span> <span class="rate-value" id="bridgePen">---</span> <span class="rate-label">BOB</span></div>
+            <div class="rate-item"><span class="rate-label">1 PYG =</span> <span class="rate-value" id="bridgePyg">---</span> <span class="rate-label">BOB</span></div>
+        </div>
+        <div id="converterError"></div>
+    </div>
+    <footer>
+        ⚡ Fuentes: Bitget (ARS) · Bybit (BOB, BRL, CLP, PEN, PYG) · Precios de compra P2P · Actualización manual
+    </footer>
+</div>
+
+<script>
+    (function() {
+        const ARS_API = 'https://criptoya.com/api/bitgetp2p/USDT/ARS/0.1';
+        const BOB_API = 'https://criptoya.com/api/bybitp2p/USDT/BOB/0.1';
+        const BRL_API = 'https://criptoya.com/api/bybitp2p/USDT/BRL/0.1';
+        const CLP_API = 'https://criptoya.com/api/bybitp2p/USDT/CLP/0.1';
+        const PEN_API = 'https://criptoya.com/api/bybitp2p/USDT/PEN/0.1';
+        const PYG_API = 'https://criptoya.com/api/bybitp2p/USDT/PYG/0.1'; // API de Paraguay añadida
+
+        const arsPriceEl = document.getElementById('arsPriceDisplay');
+        const bobPriceEl = document.getElementById('bobPriceDisplay');
+        const brlPriceEl = document.getElementById('brlPriceDisplay');
+        const clpPriceEl = document.getElementById('clpPriceDisplay');
+        const penPriceEl = document.getElementById('penPriceDisplay');
+        const pygPriceEl = document.getElementById('pygPriceDisplay'); // Elemento PYG
+
+        const arsTimeEl = document.getElementById('arsUpdateTime');
+        const bobTimeEl = document.getElementById('bobUpdateTime');
+        const brlTimeEl = document.getElementById('brlUpdateTime');
+        const clpTimeEl = document.getElementById('clpUpdateTime');
+        const penTimeEl = document.getElementById('penUpdateTime');
+        const pygTimeEl = document.getElementById('pygUpdateTime'); // Tiempo PYG
+
+        const fromSelect = document.getElementById('fromCurrency');
+        const toSelect = document.getElementById('toCurrency');
+        const amountInput = document.getElementById('amountInput');
+        const resultDiv = document.getElementById('conversionResult');
+        const swapIcon = document.getElementById('swapIcon');
+        const refreshBtn = document.getElementById('refreshPricesBtn');
+
+        const bridgeArs = document.getElementById('bridgeArs');
+        const bridgeBrl = document.getElementById('bridgeBrl');
+        const bridgeClp = document.getElementById('bridgeClp');
+        const bridgePen = document.getElementById('bridgePen');
+        const bridgePyg = document.getElementById('bridgePyg'); // Bridge PYG
+        const converterError = document.getElementById('converterError');
+
+        let prices = {
+            ARS: null,
+            BOB: null,
+            BRL: null,
+            CLP: null,
+            PEN: null,
+            PYG: null // Estado PYG añadido
         };
 
-        const root = ReactDOM.createRoot(document.getElementById('root'));
-        root.render(<App />);
-    </script>
-</body>
-</html>
+        function getCurrentTime() {
+            return new Date().toLocaleTimeString('es-CL', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+        }
+
+        function formatPrice(currency, value) {
+            if (value === null) return '⚠️ Error';
+            if (currency === 'ARS') return value.toFixed(2) + ' ARS';
+            if (currency === 'BOB') return value.toFixed(4) + ' BOB';
+            if (currency === 'BRL') return value.toFixed(
