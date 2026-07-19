@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.5, user-scalable=yes, viewport-fit=cover">
     <title>Latam USDT · Precios P2P & Conversor</title>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#0a0f1a">
     <style>
         * {
             margin: 0;
@@ -25,13 +27,16 @@
         .app-container {
             max-width: 1100px;
             width: 100%;
-            background: rgba(12, 20, 30, 0.65);
-            backdrop-filter: blur(14px);
+            /* SOLUCIÓN AL ZOOM: Cambiado blur por color sólido semi-transparente más denso */
+            background: rgba(12, 20, 30, 0.92);
             border-radius: 2rem;
             border: 1px solid rgba(0, 255, 255, 0.18);
             box-shadow: 0 30px 45px -15px rgba(0,0,0,0.7);
             overflow: hidden;
             margin: 0 auto;
+            /* Fuerza el uso de aceleración por hardware gráfico */
+            will-change: transform;
+            transform: translateZ(0);
         }
 
         .header {
@@ -62,7 +67,6 @@
         }
 
         .refresh-btn {
-            background: #1e2a3a;
             border: 1px solid #2dd4bf;
             padding: 0.7rem 1.5rem;
             border-radius: 3rem;
@@ -74,8 +78,7 @@
             cursor: pointer;
             transition: all 0.2s ease;
             font-size: 0.85rem;
-            background: rgba(18, 30, 45, 0.7);
-            backdrop-filter: blur(5px);
+            background: rgba(18, 30, 45, 0.9);
             margin-top: 0.3rem;
             white-space: nowrap;
         }
@@ -100,8 +103,7 @@
         }
 
         .price-card {
-            background: rgba(18, 28, 42, 0.7);
-            backdrop-filter: blur(4px);
+            background: rgba(18, 28, 42, 0.8);
             border-radius: 1.2rem;
             padding: 1.2rem 0.8rem;
             border: 1px solid rgba(255,255,255,0.05);
@@ -118,7 +120,7 @@
 
         .price-card:hover {
             border-color: #2dd4bf60;
-            background: rgba(25, 38, 55, 0.8);
+            background: rgba(25, 38, 55, 0.9);
             transform: translateY(-3px);
             box-shadow: 0 12px 20px -8px rgba(0,0,0,0.5);
         }
@@ -159,14 +161,12 @@
             width: 100%;
         }
 
-        /* Conversor compacto con banderas */
         .converter-section {
             margin: 0.8rem 1.2rem 1.5rem;
-            background: rgba(0,0,0,0.25);
+            background: rgba(5, 10, 20, 0.6);
             border-radius: 1.8rem;
             padding: 1.2rem 1.2rem;
             border: 1px solid rgba(0,255,255,0.12);
-            backdrop-filter: blur(5px);
         }
 
         .section-title {
@@ -186,7 +186,6 @@
             gap: 0.8rem;
         }
 
-        /* Fila principal: monedas juntas */
         .selects-row {
             display: flex;
             align-items: center;
@@ -235,14 +234,13 @@
             box-shadow: 0 0 8px #22d3ee30;
         }
 
-        /* Icono intercambio pegado */
         .swap-icon {
             font-size: 1.8rem;
             color: #22d3ee;
             cursor: pointer;
             transition: transform 0.3s ease, color 0.2s;
             margin: 0 0.2rem;
-            background: rgba(15,25,40,0.6);
+            background: rgba(15,25,40,0.8);
             border-radius: 50%;
             width: 40px;
             height: 40px;
@@ -312,7 +310,6 @@
             word-break: break-word;
         }
 
-        /* Tasas a BOB */
         .bridge-info {
             margin-top: 1.2rem;
             background: #050c14a0;
@@ -363,7 +360,6 @@
             border-top: 1px solid rgba(255,255,255,0.05);
         }
 
-        /* Móviles */
         @media (max-width: 600px) {
             body {
                 padding: 0.5rem 0.3rem;
@@ -546,21 +542,21 @@
         const BRL_API = 'https://criptoya.com/api/bybitp2p/USDT/BRL/0.1';
         const CLP_API = 'https://criptoya.com/api/bybitp2p/USDT/CLP/0.1';
         const PEN_API = 'https://criptoya.com/api/bybitp2p/USDT/PEN/0.1';
-        const PYG_API = 'https://criptoya.com/api/bybitp2p/USDT/PYG/0.1'; // API de Paraguay añadida
+        const PYG_API = 'https://criptoya.com/api/bybitp2p/USDT/PYG/0.1';
 
         const arsPriceEl = document.getElementById('arsPriceDisplay');
         const bobPriceEl = document.getElementById('bobPriceDisplay');
         const brlPriceEl = document.getElementById('brlPriceDisplay');
         const clpPriceEl = document.getElementById('clpPriceDisplay');
         const penPriceEl = document.getElementById('penPriceDisplay');
-        const pygPriceEl = document.getElementById('pygPriceDisplay'); // Elemento PYG
+        const pygPriceEl = document.getElementById('pygPriceDisplay');
 
         const arsTimeEl = document.getElementById('arsUpdateTime');
         const bobTimeEl = document.getElementById('bobUpdateTime');
         const brlTimeEl = document.getElementById('brlUpdateTime');
         const clpTimeEl = document.getElementById('clpUpdateTime');
         const penTimeEl = document.getElementById('penUpdateTime');
-        const pygTimeEl = document.getElementById('pygUpdateTime'); // Tiempo PYG
+        const pygTimeEl = document.getElementById('pygUpdateTime');
 
         const fromSelect = document.getElementById('fromCurrency');
         const toSelect = document.getElementById('toCurrency');
@@ -573,17 +569,10 @@
         const bridgeBrl = document.getElementById('bridgeBrl');
         const bridgeClp = document.getElementById('bridgeClp');
         const bridgePen = document.getElementById('bridgePen');
-        const bridgePyg = document.getElementById('bridgePyg'); // Bridge PYG
+        const bridgePyg = document.getElementById('bridgePyg');
         const converterError = document.getElementById('converterError');
 
-        let prices = {
-            ARS: null,
-            BOB: null,
-            BRL: null,
-            CLP: null,
-            PEN: null,
-            PYG: null // Estado PYG añadido
-        };
+        let prices = { ARS: null, BOB: null, BRL: null, CLP: null, PEN: null, PYG: null };
 
         function getCurrentTime() {
             return new Date().toLocaleTimeString('es-CL', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
@@ -593,4 +582,154 @@
             if (value === null) return '⚠️ Error';
             if (currency === 'ARS') return value.toFixed(2) + ' ARS';
             if (currency === 'BOB') return value.toFixed(4) + ' BOB';
-            if (currency === 'BRL') return value.toFixed(
+            if (currency === 'BRL') return value.toFixed(4) + ' BRL';
+            if (currency === 'CLP') return value.toFixed(2) + ' CLP';
+            if (currency === 'PEN') return value.toFixed(3) + ' PEN';
+            if (currency === 'PYG') return value.toFixed(0) + ' PYG';
+            return value.toString();
+        }
+
+        function updatePriceDisplay(currency, value, timeEl, priceEl) {
+            if (value !== null) {
+                priceEl.innerText = formatPrice(currency, value);
+                timeEl.innerText = `🕒 ${getCurrentTime()}`;
+            } else {
+                priceEl.innerText = '⚠️ Error';
+                timeEl.innerText = 'falló';
+            }
+        }
+
+        async function fetchPrice(apiUrl, currency) {
+            try {
+                const response = await fetch(apiUrl);
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                const data = await response.json();
+                if (data && typeof data.ask === 'number') {
+                    prices[currency] = data.ask;
+                    return data.ask;
+                } else {
+                    throw new Error('Formato inválido');
+                }
+            } catch (error) {
+                console.error(`Error ${currency}:`, error);
+                prices[currency] = null;
+                return null;
+            }
+        }
+
+        async function refreshAllPrices() {
+            refreshBtn.disabled = true;
+            refreshBtn.innerHTML = '⏳ Actualizando...';
+            converterError.innerText = '';
+
+            const [ars, bob, brl, clp, pen, pyg] = await Promise.all([
+                fetchPrice(ARS_API, 'ARS'),
+                fetchPrice(BOB_API, 'BOB'),
+                fetchPrice(BRL_API, 'BRL'),
+                fetchPrice(CLP_API, 'CLP'),
+                fetchPrice(PEN_API, 'PEN'),
+                fetchPrice(PYG_API, 'PYG')
+            ]);
+
+            updatePriceDisplay('ARS', ars, arsTimeEl, arsPriceEl);
+            updatePriceDisplay('BOB', bob, bobTimeEl, bobPriceEl);
+            updatePriceDisplay('BRL', brl, brlTimeEl, brlPriceEl);
+            updatePriceDisplay('CLP', clp, clpTimeEl, clpPriceEl);
+            updatePriceDisplay('PEN', pen, penTimeEl, penPriceEl);
+            updatePriceDisplay('PYG', pyg, pygTimeEl, pygPriceEl);
+
+            updateBridgeInfo();
+            performConversion();
+
+            const allValid = Object.values(prices).every(v => v !== null);
+            converterError.innerText = allValid ? '' : '⚠️ Algunos precios no están disponibles.';
+            refreshBtn.innerHTML = '🔄 Actualizar cotizaciones';
+            refreshBtn.disabled = false;
+        }
+
+        function updateBridgeInfo() {
+            const bob = prices.BOB;
+            if (bob === null) {
+                bridgeArs.innerText = '---';
+                bridgeBrl.innerText = '---';
+                bridgeClp.innerText = '---';
+                bridgePen.innerText = '---';
+                bridgePyg.innerText = '---';
+                return;
+            }
+
+            const format = (price, decimals) => {
+                if (price === null) return '---';
+                return (bob / price).toFixed(decimals);
+            };
+
+            bridgeArs.innerText = format(prices.ARS, 6);
+            bridgeBrl.innerText = format(prices.BRL, 4);
+            bridgeClp.innerText = format(prices.CLP, 6);
+            bridgePen.innerText = format(prices.PEN, 4);
+            bridgePyg.innerText = format(prices.PYG, 6);
+        }
+
+        function performConversion() {
+            if (Object.values(prices).some(v => v === null)) {
+                resultDiv.innerText = '⏳ Esperando precios...';
+                return;
+            }
+
+            const from = fromSelect.value;
+            const to = toSelect.value;
+            let amount = parseFloat(amountInput.value);
+            if (isNaN(amount) || amount < 0) amount = 0;
+
+            const usdtAmount = amount / prices[from];
+            const result = usdtAmount * prices[to];
+
+            let formatted = '';
+            if (to === 'ARS') formatted = result.toFixed(2) + ' ARS';
+            else if (to === 'BOB') formatted = result.toFixed(4) + ' BOB';
+            else if (to === 'BRL') formatted = result.toFixed(4) + ' BRL';
+            else if (to === 'CLP') formatted = result.toFixed(2) + ' CLP';
+            else if (to === 'PEN') formatted = result.toFixed(3) + ' PEN';
+            else if (to === 'PYG') formatted = result.toFixed(0) + ' PYG';
+            else formatted = result.toFixed(2);
+
+            resultDiv.innerText = formatted;
+        }
+
+        function swapCurrencies() {
+            const temp = fromSelect.value;
+            fromSelect.value = toSelect.value;
+            toSelect.value = temp;
+            performConversion();
+            swapIcon.classList.add('rotated');
+            setTimeout(() => swapIcon.classList.remove('rotated'), 300);
+        }
+
+        function bindEvents() {
+            fromSelect.addEventListener('change', performConversion);
+            toSelect.addEventListener('change', performConversion);
+            amountInput.addEventListener('input', performConversion);
+            swapIcon.addEventListener('click', swapCurrencies);
+            refreshBtn.addEventListener('click', refreshAllPrices);
+        }
+
+        async function init() {
+            bindEvents();
+            await refreshAllPrices();
+            performConversion();
+        }
+
+        init();
+
+        // Registro de Service Worker para PWA
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw.js')
+                    .then(reg => console.log('PWA lista, Service Worker registrado.'))
+                    .catch(err => console.log('Error registrando SW:', err));
+            });
+        }
+    })();
+</script>
+</body>
+</html>
